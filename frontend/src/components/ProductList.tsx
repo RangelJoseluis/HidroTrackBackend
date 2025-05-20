@@ -1,4 +1,4 @@
-import React from 'react'; { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 interface Product {
@@ -8,6 +8,8 @@ interface Product {
   unit_price: number;
   current_stock: number;
 }
+
+
 
 const ProductList: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);

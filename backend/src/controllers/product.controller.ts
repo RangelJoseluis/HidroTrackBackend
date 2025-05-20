@@ -1,50 +1,97 @@
-import { Request, Response } from "express";
+import { Request, Response, RequestHandler } from "express";
 import { AppDataSource } from "../config/database";
 import { Product } from "../entities/Product";
 
+
 const productRepository = AppDataSource.getRepository(Product);
 
+// Crear un producto
 export const createProduct = async (req: Request, res: Response) => {
   try {
     const product = productRepository.create(req.body);
     const result = await productRepository.save(product);
-    res.status(201).json(result);
+    res.status(201).json(result); // Enviar respuesta directamente
   } catch (error) {
-    res.status(500).json({ message: "Error creating product", error });
+    console.error("Error creating product:", error);
+    res.status(500).json({ message: "Error creating product" });
   }
 };
 
+// Obtener todos los productos
 export const getProducts = async (req: Request, res: Response) => {
   try {
     const products = await productRepository.find();
-    res.json(products);
+    res.json(products); // Enviar respuesta directamente
   } catch (error) {
-    res.status(500).json({ message: "Error fetching products", error });
+    console.error("Error fetching products:", error);
+    res.status(500).json({ message: "Error fetching products" });
   }
 };
 
-export const updateProduct = async (req: Request, res: Response) => {
+// Obtener un producto por ID
+export const getProductById: RequestHandler = async (req, res) => {
   try {
-    const product = await productRepository.findOneBy({ id: parseInt(req.params.id) });
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+    const id = parseInt(req.params.id, 10); // Convertir a número
+    if (isNaN(id)) {
+      res.status(400).json({ message: "Invalid product ID" });
+      return; // Asegúrate de terminar la ejecución
     }
+
+    const product = await productRepository.findOneBy({ id });
+    if (!product) {
+      res.status(404).json({ message: "Product not found" });
+      return; // Asegúrate de terminar la ejecución
+    }
+
+    res.json(product); // Enviar respuesta
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    res.status(500).json({ message: "Error fetching product" });
+  }
+};
+
+// Actualizar un producto
+export const updateProduct: RequestHandler = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10); // Convertir a número
+    if (isNaN(id)) {
+      res.status(400).json({ message: "Invalid product ID" });
+      return; // Asegúrate de terminar la ejecución
+    }
+
+    const product = await productRepository.findOneBy({ id });
+    if (!product) {
+      res.status(404).json({ message: "Product not found" });
+      return; // Asegúrate de terminar la ejecución
+    }
+
     productRepository.merge(product, req.body);
     const result = await productRepository.save(product);
-    res.json(result);
+    res.json(result); // Enviar respuesta
   } catch (error) {
-    res.status(500).json({ message: "Error updating product", error });
+    console.error("Error updating product:", error);
+    res.status(500).json({ message: "Error updating product" });
   }
 };
 
-export const deleteProduct = async (req: Request, res: Response) => {
+// Eliminar un producto
+export const deleteProduct: RequestHandler = async (req, res) => {
   try {
-    const result = await productRepository.delete(req.params.id);
-    if (result.affected === 0) {
-      return res.status(404).json({ message: "Product not found" });
+    const id = parseInt(req.params.id, 10); // Convertir a número
+    if (isNaN(id)) {
+      res.status(400).json({ message: "Invalid product ID" });
+      return; // Asegúrate de terminar la ejecución
     }
-    res.status(204).send();
+
+    const result = await productRepository.delete({ id });
+    if (result.affected === 0) {
+      res.status(404).json({ message: "Product not found" });
+      return; // Asegúrate de terminar la ejecución
+    }
+
+    res.status(204).send(); // Enviar respuesta
   } catch (error) {
-    res.status(500).json({ message: "Error deleting product", error });
+    console.error("Error deleting product:", error);
+    res.status(500).json({ message: "Error deleting product" });
   }
 };
